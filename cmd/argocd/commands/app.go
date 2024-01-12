@@ -992,7 +992,7 @@ func getLocalObjects(ctx context.Context, app *argoappv1.Application, proj *argo
 func getLocalObjectsString(ctx context.Context, app *argoappv1.Application, proj *argoappv1.AppProject, local, localRepoRoot, appLabelKey, kubeVersion string, apiVersions []string, kustomizeOptions *argoappv1.KustomizeOptions,
 	trackingMethod string) []string {
 	source := app.Spec.GetSource()
-	res, err := repository.GenerateManifests(ctx, local, localRepoRoot, source.TargetRevision, &repoapiclient.ManifestRequest{
+	res, err := repository.GenerateManifests(ctx, nil, local, localRepoRoot, source.TargetRevision, &repoapiclient.ManifestRequest{
 		Repo:               &argoappv1.Repository{Repo: source.RepoURL},
 		AppLabelKey:        appLabelKey,
 		AppName:            app.Name,
@@ -1004,7 +1004,7 @@ func getLocalObjectsString(ctx context.Context, app *argoappv1.Application, proj
 		TrackingMethod:     trackingMethod,
 		ProjectName:        proj.Name,
 		ProjectSourceRepos: proj.Spec.SourceRepos,
-	}, true, &git.NoopCredsStore{}, resource.MustParse("0"), nil)
+	}, true, &git.NoopCredsStore{}, resource.MustParse("0"), nil, nil)
 	errors.CheckError(err)
 
 	return res.Manifests

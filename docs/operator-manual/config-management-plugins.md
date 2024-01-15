@@ -1,4 +1,3 @@
-
 # Config Management Plugins
 
 Argo CD's "native" config management tools are Helm, Jsonnet, and Kustomize. If you want to use a different config
@@ -21,7 +20,7 @@ The following sections will describe how to create, install, and use plugins. Ch
 
 ### Sidecar or services plugin
 
-An operator can configure a plugin tool via a sidecar to repo-server, or as a kubernetes service in the same cluster
+An operator can configure a plugin tool via a sidecar to the repo-server, or as a Kubernetes service in the same cluster
 as Argo CD. The following changes are required to configure a new plugin:
 
 #### Write the plugin configuration file
@@ -68,7 +67,7 @@ spec:
     # directory. If there is a match, this plugin may be used for the Application.
     fileName: "./subdir/s*.yaml"
     find:
-      # This does the same thing as fileName, but it supports double-start (nested directory) glob patterns.
+      # This does the same thing as fileName, but it supports double-star (nested directory) glob patterns.
       glob: "**/Chart.yaml"
       # The find command runs in the repository's root directory. To match, it must exit with status code 0 _and_
       # produce non-empty output to standard out.
@@ -151,7 +150,7 @@ WORKDIR /home/argocd/cmp-server/config/
 COPY plugin.yaml ./
 ```
 
-If you use a stock image for the sidecar or would rather maintain the plugin configuration in a ConfigMap, just nest the
+If you use a stock image for the plugin or would rather maintain the plugin configuration in a ConfigMap, just nest the
 plugin config file in a ConfigMap under the `plugin.yaml` key and mount the ConfigMap in the container (see next section).
 
 ```yaml
@@ -178,14 +177,14 @@ data:
 #### Register the plugin as a sidecar
 
 To install a plugin as a sidecar, patch argocd-repo-server to run the plugin container as a sidecar, with
-argocd-cmp-server as its entrypoint. You can use either off-the-shelf or custom-built plugin image as sidecar image.
+argocd-cmp-server as its entrypoint. You can use either an off-the-shelf or custom-built plugin image as sidecar image.
 For example:
 
 ```yaml
 containers:
 - name: my-plugin
   command: [/var/run/argocd/argocd-cmp-server] # Entrypoint should be Argo CD lightweight CMP server i.e. argocd-cmp-server
-  image: busybox # This can be off-the-shelf or custom-built image
+  image: busybox # This can be an off-the-shelf or custom-built image
   securityContext:
     runAsNonRoot: true
     runAsUser: 999
@@ -217,11 +216,11 @@ volumes:
 
 #### Register the plugin as a service
 
-Argo CD needs to have access to the cluster to discover services. To do this it uses the service account token to gain access
-to the cluster. It also needs a Role or ClusterRole bound to that service account to access the namespace(s) that it the
-services are in. By default (no configuration) the services are looked for in the same namespace as the argocd-repo-server. You can set
-ARGOCD_SERVICE_PLUGINS_NAMESPACE to the name of a namespace to change it to look in a different namespace. To look in all
-namespaces set ARGOCD_SERVICE_PLUGINS_NAMESPACE to '*'.
+Argo CD needs to have access to the cluster to discover services. To do this it uses a standard kubernetes service account token to authenticate
+with the cluster. It also needs a Role or ClusterRole bound to that service account to access with the permissions get, list and watch the namespace(s)
+that the services are in. By default (no configuration) the services are looked for in the same namespace as the argocd-repo-server. You can set
+`ARGOCD_SERVICE_PLUGINS_NAMESPACE` to the name of a namespace to change it to look in a different namespace. To look in all
+namespaces set `ARGOCD_SERVICE_PLUGINS_NAMESPACE` to `*`. You cannot configure multiple specific namespaces, just one namespace or all namespaces.
 
 !!! Ensure that:
     1. The argocd-repo-server deployment has `automountServiceAccountToken: true`
@@ -291,8 +290,8 @@ subjects:
 ```
 
 To install a plugin as a service, deploy something running your code. This would usually be a deployment, but Argo CD doesn't
-actually care what is behind the service. You can use either off-the-shelf or custom-built plugin image as sidecar image. This should
-follow the same rules as for a sidecar.
+actually care what is behind the service. You can use either an off-the-shelf or custom-built plugin image as sidecar image. This
+should follow the same rules as for a sidecar.
 
 To advertise the service to Argo CD you must provide a service with the label `argocd.argoproj.io/plugin: true`. Each port in the
 service will be treated as a separate plugin, and the name of the port is the name of the plugin, which will be used by applications
@@ -356,10 +355,10 @@ If you'd like to disable this feature do not provide a service account token.
 #### Choosing between sidecar and service plugins
 
 If you are debugging your plugin, choose a service to start with. You can then restart the deployments behind the service without
-needing to restart Argo CD. You could also easilly develop in an in cluster development environment this way. If you want to develop
+needing to restart Argo CD. You could also easily develop in an in-cluster development environment this way. If you want to develop
 locally and your cluster can reach your local machine you could even develop using an ExternalName service.
 
-For large mono-repos then sidecars will continue to work where services will take longer to transfer the state to the plugin. Argo CD
+For large mono-repos sidecars will continue to work where services will take longer to transfer the state to the plugin. Argo CD
 doesn't condone large repos anyway. Because the network traffic between the repo-server and the plugin is over a unix socket it is by
 default more secure.
 
@@ -501,7 +500,7 @@ If you are actively developing a sidecar-installed CMP, keep a few things in min
 
 ## Debugging a CMP as a service
 
-If you are actively developing a services based CMP then things should be more familiar than as a sidecar. You still need to bare in mind that CMP errors are cached by the repo-server in Redis. Restarting the repo-server Pod will not clear the cache. Always do a "Hard Refresh" when actively developing a CMP so you have the latest output.
+If you are actively developing a services based CMP then things should be more familiar than as a sidecar. You still need to bear in mind that CMP errors are cached by the repo-server in Redis. Restarting the repo-server Pod will not clear the cache. Always do a "Hard Refresh" when actively developing a CMP so you have the latest output.
 
 ### Other Common Errors
 | Error Message | Cause |
